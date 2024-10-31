@@ -33,8 +33,8 @@ export default function RootLayout({
         <main className="flex-grow container mx-auto px-4 py-8 min-h-screen">
           <div className="max-w-2xl mx-auto">
             <p className="text-center mb-6 text-gray-600">
-              Describe how you're feeling, and we'll recommend a book that
-              matches your emotional state.
+              Describe how you{"'"}re feeling, and we{"'"}ll recommend a book
+              that matches your emotional state.
             </p>
 
             <CopilotKit runtimeUrl="/api/copilotkit">
