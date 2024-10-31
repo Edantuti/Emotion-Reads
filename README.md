@@ -20,3 +20,4 @@ Finally, to run the dev server
 ```bash
 pnpm dev
 ```
+<img src="./images/demo.png" alt="demo-image" />
