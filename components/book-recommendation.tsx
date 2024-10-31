@@ -7,18 +7,25 @@ import { Button } from "./ui/button";
 import { BookCard } from "./book-card";
 import { Textarea } from "./ui/textarea";
 import { Loader } from "./loader";
+import { Toaster } from "./ui/sonner";
 
 export function BookRecommendationChat() {
   const [books, setBooks] = useState<
-    { name: string; author_name: string; coverId: string }[]
+    {
+      name: string;
+      author_name: string;
+      coverId: string;
+      amazonIds: string[];
+    }[]
   >([]);
+  const [booksName, setBooksName] = useState<string[]>([]);
   const [mood, setMood] = useState<string>("");
   const { visibleMessages, appendMessage, isLoading } = useCopilotChat();
   const [loadingState, setLoadingState] = useState<string>("not-loaded");
   const sendMessage = (content: string) => {
     appendMessage(
       new TextMessage({
-        content: `Recommend 8 best random books with their names only in a json format with recommendation as the key (don't include the markdown format) if a person has the moods described here:${content}`,
+        content: `Recommend 8 random books ${booksName.length > 0 && `excluding these books :${booksName?.join(", ")}`} with their names only with no repetition, published after 2000 in a json format with recommendation as the key (don't include the markdown format) that matches the mood here:${content} `,
         role: Role.User,
       }),
     );
@@ -44,10 +51,15 @@ export function BookRecommendationChat() {
         `https://openlibrary.org/search.json?title=${bookName}`,
       );
       const content = await response.json();
+      const book =
+        content.docs.filter(
+          (doc: { title: string }) => doc.title === data[i],
+        ) ?? content.docs[0];
       const bookObject = {
-        name: content.docs[0].title,
-        coverId: content.docs[0].cover_i,
-        author_name: content.docs[0].author_name,
+        name: book[0].title,
+        coverId: book[0].cover_i,
+        author_name: book[0].author_name,
+        amazonIds: book[0].id_amazon,
       };
       books.push(bookObject);
     }
@@ -68,18 +80,16 @@ export function BookRecommendationChat() {
     if (
       message &&
       message.isTextMessage() &&
-      message.content.lastIndexOf("```") !== 0 &&
-      message.content.lastIndexOf("```") !== -1
+      message.content.lastIndexOf("}") !== -1
     ) {
       const content = message.content;
       let jsonString = content.substring(7);
-      jsonString = jsonString.substring(0, jsonString.length - 5);
+      jsonString = jsonString.substring(0, jsonString.lastIndexOf("}") + 1);
       const data = JSON.parse(jsonString);
-
+      setBooksName([...data.recommendation]);
       fetchBooks(data.recommendation);
     }
   }, [visibleMessages]);
-  console.log(loadingState);
   return (
     <section className="flex flex-col gap-5">
       <section className="flex gap-2 flex-col">
@@ -108,9 +118,11 @@ export function BookRecommendationChat() {
               author={book.author_name}
               coverUrl={`https://covers.openlibrary.org/b/id/${book.coverId}-L.jpg`}
               altText={`${book.name}-image`}
+              amazonIds={book.amazonIds}
             />
           ))}
       </div>
+      <Toaster />
     </section>
   );
 }

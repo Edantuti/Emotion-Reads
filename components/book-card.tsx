@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
 
 interface BookCardProps {
   title: string;
   author: string;
   coverUrl: string;
   altText: string;
+  amazonIds: string[];
 }
 
 export function BookCard({
@@ -15,14 +17,28 @@ export function BookCard({
   author,
   coverUrl,
   altText,
+  amazonIds,
 }: Partial<BookCardProps>) {
   const [isHovered, setIsHovered] = useState(false);
 
+  function handleClick() {
+    toast("Redirecting to Amazon link, might not be the right one");
+    if (amazonIds) {
+      for (let i = 0; i < amazonIds.length; i++) {
+        if (amazonIds[i]) {
+          window.open(`https://amazon.com/dp/${amazonIds[i]}`, "_blank");
+          return;
+        }
+      }
+    }
+    toast("Doesn't have a amazon link, kindly google it for further details");
+  }
   return (
     <Card
       className="w-full max-w-xs overflow-hidden transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-xl"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handleClick}
       style={{
         backgroundImage:
           "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
