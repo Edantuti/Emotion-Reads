@@ -25,7 +25,7 @@ export function BookRecommendationChat() {
   const sendMessage = (content: string) => {
     appendMessage(
       new TextMessage({
-        content: `Recommend 8 random books ${booksName.length > 0 && `excluding these books :${booksName?.join(", ")}`} with their names only with no repetition, published after 2000 in a json format with recommendation as the key (don't include the markdown format) that matches the mood here:${content} `,
+        content: `Provide a JSON array object of 8 unique book recommendations published after 2000, with the key "recommendation" in this format {"recommendation":["nameofthebook(short names)","nameofthebook(short names)"]}. E${booksName.length > 0 ? `Exclude any books in the provided list: [${booksName.join(", ")}]` : ""}. Only include book titles, and ensure selections match the mood and style in the following text: '${content}'. `,
         role: Role.User,
       }),
     );
@@ -51,12 +51,13 @@ export function BookRecommendationChat() {
         `https://openlibrary.org/search.json?title=${bookName}`,
       );
       const content = await response.json();
-      const book =
-        content.docs.filter(
-          (doc: { title: string }) => doc.title === data[i],
-        ) ?? content.docs[0];
+      let book = content.docs.filter((doc: { title: string }) =>
+        doc.title.includes(data[i]),
+      );
+      if (book.length === 0 || !book[0].title) book = [{ ...content.docs[0] }];
+      console.log(book);
       const bookObject = {
-        name: book[0].title,
+        name: book[0].title ?? data[i],
         coverId: book[0].cover_i,
         author_name: book[0].author_name,
         amazonIds: book[0].id_amazon,
@@ -83,8 +84,9 @@ export function BookRecommendationChat() {
       message.content.lastIndexOf("}") !== -1
     ) {
       const content = message.content;
-      let jsonString = content.substring(7);
+      let jsonString = content.substring(content.lastIndexOf("{"));
       jsonString = jsonString.substring(0, jsonString.lastIndexOf("}") + 1);
+      console.log(jsonString);
       const data = JSON.parse(jsonString);
       setBooksName([...data.recommendation]);
       fetchBooks(data.recommendation);
