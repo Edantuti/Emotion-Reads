@@ -25,7 +25,7 @@ export function BookRecommendationChat() {
   const sendMessage = (content: string) => {
     appendMessage(
       new TextMessage({
-        content: `Provide a JSON array object of 8 unique book recommendations published after 2000, with the key "recommendation" in this format {"recommendation":["nameofthebook(short names)","nameofthebook(short names)"]}. E${booksName.length > 0 ? `Exclude any books in the provided list: [${booksName.join(", ")}]` : ""}. Only include book titles, and ensure selections match the mood and style in the following text: '${content}'. `,
+        content: `Provide a JSON array object of 8 unique book recommendations published after 2000,  in this format {"recommendation":["nameofthebook(short names)","nameofthebook(short names)","nameofthebook(short names)","nameofthebook(short names)","nameofthebook(short names)","nameofthebook(short names)","nameofthebook(short names)","nameofthebook(short names)"]}. E${booksName.length > 0 ? `Exclude any books in the provided list: [${booksName.join(", ")}]` : ""}. Only include book titles, and ensure selections match the mood and style in the following text: '${content}'. `,
         role: Role.User,
       }),
     );
@@ -55,7 +55,6 @@ export function BookRecommendationChat() {
         doc.title.includes(data[i]),
       );
       if (book.length === 0 || !book[0].title) book = [{ ...content.docs[0] }];
-      console.log(book);
       const bookObject = {
         name: book[0].title ?? data[i],
         coverId: book[0].cover_i,
@@ -84,12 +83,18 @@ export function BookRecommendationChat() {
       message.content.lastIndexOf("}") !== -1
     ) {
       const content = message.content;
-      let jsonString = content.substring(content.lastIndexOf("{"));
-      jsonString = jsonString.substring(0, jsonString.lastIndexOf("}") + 1);
-      console.log(jsonString);
-      const data = JSON.parse(jsonString);
-      setBooksName([...data.recommendation]);
-      fetchBooks(data.recommendation);
+      const jsonString = content.substring(
+        content.lastIndexOf("{"),
+        content.lastIndexOf("}") + 1,
+      );
+      try {
+        const data = JSON.parse(jsonString);
+
+        setBooksName([...data.recommendation]);
+        fetchBooks(data.recommendation);
+      } catch (error) {
+        console.error(error);
+      }
     }
   }, [visibleMessages]);
   return (
